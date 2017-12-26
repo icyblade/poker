@@ -38,7 +38,7 @@ setup(
     description='Poker Framework',
     classifiers=classifiers,
     keywords='poker',
-    author=u'Kiss György',
+    author='Kiss György',
     author_email="kissgyorgy@me.com",
     url="https://github.com/pokerregion/poker",
     license="MIT",

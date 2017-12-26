@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals, absolute_import, division, print_function
+
 
 import re
 from decimal import Decimal
@@ -102,14 +102,14 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
                           (\s+(?P<cash_currency>\S+))?                # cash currency
                          ))
                         \)\s+
-                        -\s+.+?\s+                                    # localized date
-                        \[(?P<date>.+?)\]                             # ET date
+                        -\s+                                    
+                        (?P<date>.+)                                 # ET date
                         """, re.VERBOSE)
     _table_re = re.compile(r"^Table '(.*)' (\d+)-max Seat #(?P<button>\d+) is the button")
     _seat_re = re.compile(r"^Seat (?P<seat>\d+): (?P<name>.+?) \(\$?(?P<stack>\d+(\.\d+)?) in chips\)")  # noqa
     _hero_re = re.compile(r"^Dealt to (?P<hero_name>.+?) \[(..) (..)\]")
-    _pot_re = re.compile(r"^Total pot (\d+(?:\.\d+)?) .*\| Rake (\d+(?:\.\d+)?)")
-    _winner_re = re.compile(r"^Seat (\d+): (.+?) collected \((\d+(?:\.\d+)?)\)")
+    _pot_re = re.compile(r"^Total pot \S+?(\d+(?:\.\d+)?) .*\| Rake \S+?(\d+(?:\.\d+)?)")
+    _winner_re = re.compile(r"^Seat (\d+): (.+?) collected \(\S+?(\d+(?:\.\d+)?)\)")
     _showdown_re = re.compile(r"^Seat (\d+): (.+?) showed \[.+?\] and won")
     _ante_re = re.compile(r".*posts the ante (\d+(?:\.\d+)?)")
     _board_re = re.compile(r"(?<=[\[ ])(..)(?=[\] ])")
@@ -200,7 +200,7 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
             index = int(match.group('seat')) - 1
             self.players[index] = hh._Player(
                 name=match.group('name'),
-                stack=int(match.group('stack')),
+                stack=float(match.group('stack')),
                 seat=int(match.group('seat')),
                 combo=None
             )

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals, absolute_import, division, print_function
+
 
 import re
 import random
@@ -62,10 +62,12 @@ class _HandMeta(type):
 
 
 @functools.total_ordering
-class Hand(_ReprMixin):
+class Hand(_ReprMixin, metaclass=_HandMeta):
     """General hand without a precise suit. Only knows about two ranks and shape."""
-    __metaclass__ = _HandMeta
     __slots__ = ('first', 'second', '_shape')
+
+    def __getnewargs__(self):
+        return self.hand,
 
     def __new__(cls, hand):
         if isinstance(hand, cls):
@@ -77,6 +79,7 @@ class Hand(_ReprMixin):
         first, second = hand[:2]
 
         self = object.__new__(cls)
+        self.hand = hand
 
         if len(hand) == 2:
             if first != second:
@@ -214,6 +217,9 @@ class Combo(_ReprMixin):
 
     __slots__ = ('first', 'second')
 
+    def __getnewargs__(self):
+        return self.combo,
+
     def __new__(cls, combo):
         if isinstance(combo, Combo):
             return combo
@@ -224,6 +230,7 @@ class Combo(_ReprMixin):
             raise ValueError("{!r}, Pair can't have the same suit: {!r}".format(combo, combo[1]))
 
         self = super(Combo, cls).__new__(cls)
+        self.combo = combo
         self._set_cards_in_order(combo[:2], combo[2:])
         return self
 
@@ -607,7 +614,7 @@ class Range(object):
     @classmethod
     def from_objects(cls, iterable):
         """Make an instance from an iterable of Combos, Hands or both."""
-        range_string = ' '.join(unicode(obj) for obj in iterable)
+        range_string = ' '.join(str(obj) for obj in iterable)
         return cls(range_string)
 
     def __eq__(self, other):
@@ -625,7 +632,7 @@ class Range(object):
             return item in self._combos or item.to_hand() in self._hands
         elif isinstance(item, Hand):
             return item in self._all_hands
-        elif isinstance(item, unicode):
+        elif isinstance(item, str):
             if len(item) == 4:
                 combo = Combo(item)
                 return combo in self._combos or combo.to_hand() in self._hands
@@ -639,11 +646,11 @@ class Range(object):
         return ', '.join(self.rep_pieces)
 
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return self.__unicode__()
 
     def __repr__(self):
         range = ' '.join(self.rep_pieces)
-        return "{}('{}')".format(self.__class__.__name__, range).encode('utf-8')
+        return "{}('{}')".format(self.__class__.__name__, range)
 
     def __getstate__(self):
         return {'_hands': self._hands, '_combos': self._combos}
@@ -683,7 +690,7 @@ class Range(object):
                 hand = Hand(row.val + col.val + suit)
 
                 if hand in self.hands:
-                    html.append(unicode(hand))
+                    html.append(str(hand))
 
                 html.append('</td>')
 
@@ -715,7 +722,7 @@ class Range(object):
                     suit = ''
 
                 hand = Hand(row.val + col.val + suit)
-                hand = unicode(hand) if hand in self.hands else ''
+                hand = str(hand) if hand in self.hands else ''
                 table.append(border)
                 table.append(hand.ljust(4))
 
@@ -738,13 +745,13 @@ class Range(object):
 
         all_combos = self._all_combos
 
-        pairs = list(filter(lambda c: c.is_pair, all_combos))
+        pairs = list([c for c in all_combos if c.is_pair])
         pair_pieces = self._get_pieces(pairs, 6)
 
-        suiteds = list(filter(lambda c: c.is_suited, all_combos))
+        suiteds = list([c for c in all_combos if c.is_suited])
         suited_pieces = self._get_pieces(suiteds, 4)
 
-        offsuits = list(filter(lambda c: c.is_offsuit, all_combos))
+        offsuits = list([c for c in all_combos if c.is_offsuit])
         offsuit_pieces = self._get_pieces(offsuits, 12)
 
         pair_strs = self._shorten_pieces(pair_pieces)
@@ -790,7 +797,7 @@ class Range(object):
         first = last = pieces[0]
         for current in pieces[1:]:
             if isinstance(last, Combo):
-                str_pieces.append(unicode(last))
+                str_pieces.append(str(last))
                 first = last = current
             elif isinstance(current, Combo):
                 str_pieces.append(self._get_format(first, last))
@@ -810,7 +817,7 @@ class Range(object):
 
     def _get_format(self, first, last):
         if first == last:
-            return unicode(first)
+            return str(first)
         elif (first.is_pair and first.first.val == 'A' or
                     Rank.difference(first.first, first.second) == 1):
             return '%s+' % last

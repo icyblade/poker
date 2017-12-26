@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals, absolute_import, division, print_function
+
 
 import re
 from decimal import Decimal
@@ -162,8 +162,7 @@ class PKRHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory):
             start = self._sections[section] + 1
 
             street_line = self._splitted[start]
-            cards = list(map(lambda x: x[self._SPLIT_CARD_SPACE],
-                             self._card_re.findall(street_line)))
+            cards = list([x[self._SPLIT_CARD_SPACE] for x in self._card_re.findall(street_line)])
             setattr(self, street, Card(cards[0]))
 
             stop = next(v for v in self._sections if v > start) - 1

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals, absolute_import, division, print_function
+
 
 from pathlib import Path
 from poker import Strategy, Range
@@ -58,7 +58,7 @@ def test_situation_values():
 
 
 def test_iterable():
-    assert [(name, strat) for name, strat in strategy.items()]
+    assert [(name, strat) for name, strat in list(strategy.items())]
 
 
 def test_subscriptable_by_Situation_name():

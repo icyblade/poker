@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals, absolute_import, division, print_function
+
 
 from collections import Mapping, OrderedDict as odict
 from pathlib import Path
@@ -44,7 +44,7 @@ class Strategy(Mapping):
         for name in self._config.sections():
             # configparser set non-specified values to '', we want default to None
             values = dict.fromkeys(_Situation.__slots__, None)
-            for key, val in self._config[name].items():
+            for key, val in list(self._config[name].items()):
                 # filter out fields not implemented, otherwise it would
                 # cause TypeError for _Situation constructor
                 if (not val) or (key not in _Situation.__slots__):
@@ -72,23 +72,23 @@ class Strategy(Mapping):
         return iter(self._situations)
 
     def items(self):
-        return self._situations.items()
+        return list(self._situations.items())
 
     def keys(self):
-        return self._situations.keys()
+        return list(self._situations.keys())
 
     def get(self, key, default=None):
         return self._situations.get(key, default)
 
     def __getitem__(self, key):
-        if isinstance(key, unicode):
+        if isinstance(key, str):
             return self._situations.__getitem__(key)
         elif isinstance(key, int):
             return self._tuple[key]
         raise TypeError('You can lookup by int or str')
 
     def values(self):
-        return self._situations.values()
+        return list(self._situations.values())
 
     def __contains__(self, key):
         return self._situations.__contains__(key)

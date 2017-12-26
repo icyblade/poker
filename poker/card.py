@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals, absolute_import, division, print_function
+
 
 import itertools
 from functools import total_ordering
@@ -73,11 +73,12 @@ class _CardMeta(type):
 
 
 @total_ordering
-class Card(_ReprMixin):
+class Card(_ReprMixin, metaclass=_CardMeta):
     """Represents a Card, which consists a Rank and a Suit."""
-
-    __metaclass__ = _CardMeta
     __slots__ = ('rank', 'suit')
+
+    def __getnewargs__(self):
+        return self.card,
 
     def __new__(cls, card):
         if isinstance(card, cls):
@@ -87,6 +88,7 @@ class Card(_ReprMixin):
             raise ValueError('length should be two in %r' % card)
 
         self = object.__new__(cls)
+        self.card = card
         self.rank = Rank(card[0])
         self.suit = Suit(card[1])
         return self
