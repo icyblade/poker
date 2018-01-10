@@ -83,7 +83,7 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
     _TZ = pytz.timezone('US/Eastern')  # ET
     _split_re = re.compile(r" ?\*\*\* ?\n?|\n")
     _header_re = re.compile(r"""
-                        ^PokerStars\s+                                # Poker Room
+                        ^PokerStars\s+(Zoom)?\s*                      # Poker Room
                         Hand\s+\#(?P<ident>\d+):\s+                   # Hand history id
                         (Tournament\s+\#(?P<tournament_ident>\d+),\s+ # Tournament Number
                          ((?P<freeroll>Freeroll)|(                    # buyin is Freeroll
@@ -250,7 +250,7 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
     def _parse_pot(self):
         potline = self._splitted[self._sections[-1] + 2]
         match = self._pot_re.match(potline)
-        self.total_pot = int(match.group(1))
+        self.total_pot = float(match.group(1))
 
     def _parse_board(self):
         boardline = self._splitted[self._sections[-1] + 3]
