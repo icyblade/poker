@@ -34,6 +34,14 @@ class _Street(hh._BaseStreet):
                 action = self._parse_muck(line)
             elif ' said, "' in line:  # skip chat lines
                 continue
+            elif 'has timed out' in line:  # skip time out
+                continue
+            elif 'is disconnected' in line:  # skip disconnect
+                continue
+            elif 'is connected' in line:  # skip connect
+                continue
+            elif 'leaves the table' in line:  # skip leave
+                continue
             elif ':' in line:
                 action = self._parse_player_action(line)
             else:
@@ -46,6 +54,7 @@ class _Street(hh._BaseStreet):
         first_paren_index = line.find('(')
         second_paren_index = line.find(')')
         amount = line[first_paren_index + 1:second_paren_index]
+        amount = amount[1:]  # erase unit
         name_start_index = line.find('to ') + 3
         name = line[name_start_index:]
         return name, Action.RETURN, Decimal(amount)
@@ -56,6 +65,7 @@ class _Street(hh._BaseStreet):
         second_space_index = line.find(' ', first_space_index + 1)
         third_space_index = line.find(' ', second_space_index + 1)
         amount = line[second_space_index + 1:third_space_index]
+        amount = amount[1:]  # erase unit
         self.pot = Decimal(amount)
         return name, Action.WIN, self.pot
 
@@ -68,6 +78,7 @@ class _Street(hh._BaseStreet):
         name, _, action = line.partition(': ')
         action, _, amount = action.partition(' ')
         amount, _, _ = amount.partition(' ')
+        amount = amount[1:]  # erase unit
 
         if amount:
             return name, Action(action), Decimal(amount)
@@ -87,8 +98,8 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
                         Hand\s+\#(?P<ident>\d+):\s+                   # Hand history id
                         (Tournament\s+\#(?P<tournament_ident>\d+),\s+ # Tournament Number
                          ((?P<freeroll>Freeroll)|(                    # buyin is Freeroll
-                          \$?(?P<buyin>\d+(\.\d+)?)                   # or buyin
-                          (\+\$?(?P<rake>\d+(\.\d+)?))?               # and rake
+                          [\$€]?(?P<buyin>\d+(\.\d+)?)                   # or buyin
+                          (\+[\$€]?(?P<rake>\d+(\.\d+)?))?               # and rake
                           (\s+(?P<currency>[A-Z]+))?                  # and currency
                          ))\s+
                         )?
@@ -97,8 +108,8 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
                         (-\s+Level\s+(?P<tournament_level>\S+)\s+)?   # Level (optional)
                         \(
                          (((?P<sb>\d+)/(?P<bb>\d+))|(                 # tournament blinds
-                          \$(?P<cash_sb>\d+(\.\d+)?)/                 # cash small blind
-                          \$(?P<cash_bb>\d+(\.\d+)?)                  # cash big blind
+                          [\$€](?P<cash_sb>\d+(\.\d+)?)/                 # cash small blind
+                          [\$€](?P<cash_bb>\d+(\.\d+)?)                  # cash big blind
                           (\s+(?P<cash_currency>\S+))?                # cash currency
                          ))
                         \)\s+
@@ -106,7 +117,7 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
                         (?P<date>.+)                                 # ET date
                         """, re.VERBOSE)
     _table_re = re.compile(r"^Table '(.*)' (\d+)-max Seat #(?P<button>\d+) is the button")
-    _seat_re = re.compile(r"^Seat (?P<seat>\d+): (?P<name>.+?) \(\$?(?P<stack>\d+(\.\d+)?) in chips\)")  # noqa
+    _seat_re = re.compile(r"^Seat (?P<seat>\d+): (?P<name>.+?) \([\$€]?(?P<stack>\d+(\.\d+)?) in chips\)")  # noqa
     _hero_re = re.compile(r"^Dealt to (?P<hero_name>.+?) \[(..) (..)\]")
     _pot_re = re.compile(r"^Total pot \S+?(\d+(?:\.\d+)?) .*\| Rake \S+?(\d+(?:\.\d+)?)")
     _winner_re = re.compile(r"^Seat (\d+): (.+?) collected \(\S+?(\d+(?:\.\d+)?)\)")
@@ -267,7 +278,7 @@ class PokerStarsHandHistory(hh._SplittableHandHistoryMixin, hh._BaseHandHistory)
             if not self.show_down and "collected" in line:
                 match = self._winner_re.match(line)
                 winners.add(match.group(2))
-            elif self.show_down and "won" in line:
+            elif self.show_down and " won" in line:  # fix "won" in username
                 match = self._showdown_re.match(line)
                 winners.add(match.group(2))
 
